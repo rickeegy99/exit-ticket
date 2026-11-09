@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3-2-1 Teacher Consolidation Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+:root{
+  --ink:#202b49;
+  --muted:#7d879e;
+  --purple:#7665e8;
+  --pink:#e779a4;
+  --blue:#4c9fdb;
+  --green:#3eaa8b;
+  --bg:#f5f6fc;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:18px 12px;
+  font-family:Nunito,sans-serif;color:var(--ink);
+  background:transparent;
+}
+button,select,input{font-family:inherit}
+button{cursor:pointer}
+.shell{
+  max-width:1100px;margin:auto;background:var(--bg);
+  border-radius:24px;overflow:hidden;
+  box-shadow:0 12px 40px #31356416;
+}
+.hero{
+  padding:30px;background:linear-gradient(120deg,#6457cb,#8877ec 65%,#a38be9);
+  color:white;position:relative;overflow:hidden;
+}
+.hero:after{
+  content:"321";position:absolute;right:15px;top:-35px;
+  font-size:160px;font-weight:900;opacity:.08;
+  pointer-events:none;
+}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{
+  padding:6px 12px;border-radius:30px;background:#ffffff26;
+  font-size:11px;font-weight:900;letter-spacing:1px;
+}
+.hero h1{font-size:clamp(27px,5vw,39px);margin:13px 0 4px;font-weight:900}
+.hero p{margin:0;font-size:14px;opacity:.9}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hero-actions button{
+  border:1px solid #ffffff60;background:#ffffff20;
+  color:white;border-radius:10px;padding:9px 13px;font-weight:800;
+}
+.content{padding:23px}
+.panel{
+  background:white;border:1px solid #e8eaf2;
+  border-radius:17px;padding:18px;margin-bottom:16px;
+}
+.login-wrap{max-width:430px;margin:30px auto;padding:25px}
+h2{font-size:18px;margin:0 0 5px;font-weight:900}
+.small{font-size:12px;color:var(--muted)}
+.field{margin-top:14px}
+.field label{display:block;font-size:12px;font-weight:900;margin-bottom:6px}
+.field input,.field select{
+  width:100%;padding:12px;border:1px solid #e4e7f0;
+  border-radius:10px;background:#fafbff;font-size:14px;outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--purple)}
+.primary{
+  background:linear-gradient(110deg,#6e60d9,#9280ec);
+  color:white;border:0;border-radius:11px;padding:12px 17px;
+  font-weight:900;font-size:14px;
+}
+.primary:disabled{opacity:.6;cursor:not-allowed}
+.secondary{
+  background:#f0effb;color:#6557cb;border:1px solid #e2defa;
+  border-radius:10px;padding:10px 13px;font-weight:900;font-size:12px;
+}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+.toolbar .field{flex:1;min-width:200px;margin:0}
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;
+}
+.stat{
+  background:white;border:1px solid #e8eaf2;border-radius:15px;
+  padding:15px;
+}
+.stat strong{display:block;font-size:27px;font-weight:900}
+.stat span{font-size:11px;color:var(--muted);font-weight:800}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+.tab{
+  border:1px solid #e7e8f0;background:white;color:#69728b;
+  padding:11px 15px;border-radius:11px;font-size:13px;font-weight:900;
+}
+.tab.active{background:#6d5fd6;color:white;border-color:#6d5fd6}
+.section-heading{display:flex;align-items:center;gap:12px;margin-bottom:15px}
+.num{
+  width:43px;height:43px;border-radius:14px;
+  display:grid;place-items:center;font-size:22px;font-weight:900;
+}
+.num.learn{background:#eeebff;color:var(--purple)}
+.num.interest{background:#fff0f5;color:var(--pink)}
+.num.question{background:#e9f5ff;color:var(--blue)}
+
+/* ORGANIC WORD CLOUD */
+.cloud-panel{
+  background:
+    radial-gradient(ellipse at 50% 45%,#ffffff 0%,#faf9ff 55%,#f1f3ff 100%);
+  border:1px solid #e9e8f7;border-radius:16px;
+  padding:12px;min-height:280px;position:relative;
+  overflow:hidden;
+}
+.cloud{
+  position:relative;
+  width:100%;
+  height:360px;
+  min-height:280px;
+  overflow:hidden;
+  isolation:isolate;
+}
+.word{
+  position:absolute;
+  display:block;
+  white-space:nowrap;
+  font-weight:900;
+  line-height:1;
+  border:0;
+  background:transparent;
+  padding:2px 3px;
+  border-radius:7px;
+  transform-origin:center center;
+  transition:background .18s,filter .18s;
+  z-index:1;
+  margin:0;
+}
+.word:hover{
+  background:#ffffffdc;
+  filter:brightness(.85);
+  z-index:10;
+}
+.word.selected{
+  background:white;
+  outline:2px solid currentColor;
+  z-index:11;
+  box-shadow:0 2px 8px #30305018;
+}
+.word-note{text-align:center;font-size:11px;color:var(--muted);margin-top:5px}
+.legend{font-size:11px;color:var(--muted);margin:10px 0}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:15px 0}
+.toggle{
+  display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;
+  color:#657089;
+}
+.toggle input{accent-color:var(--purple);width:17px;height:17px}
+.response-list{display:grid;gap:10px}
+.response-card{
+  background:white;border:1px solid #e8eaf2;border-radius:13px;
+  padding:15px;animation:fade .25s ease;
+}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.response-head{
+  display:flex;justify-content:space-between;gap:10px;
+  align-items:center;margin-bottom:8px;
+}
+.student-name{font-size:12px;font-weight:900;color:#6e60d9}
+.answer{font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.empty{text-align:center;padding:35px 15px;color:var(--muted);font-size:13px}
+.status{
+  display:none;padding:12px;border-radius:10px;margin-top:12px;
+  font-size:13px;font-weight:800;line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.status.error{display:block;background:#fff0f1;color:#b33f53}
+.status.success{display:block;background:#e6f7f0;color:#247b60}
+.discussion{
+  background:#f3f1ff;border:1px solid #e4defe;border-radius:16px;
+  padding:20px;margin:12px 0;
+}
+.discussion .big-answer{
+  font-size:clamp(19px,3vw,26px);font-weight:800;
+  line-height:1.5;margin:15px 0;
+}
+.discussion .speaker{font-size:12px;font-weight:900;color:#7665e8}
+.discussion-nav{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.discussion-nav button:disabled{opacity:.4;cursor:not-allowed}
+.hidden{display:none!important}
+footer{text-align:center;color:#a2a7b7;font-size:11px;font-weight:800;padding:0 15px 22px}
+
+@media(max-width:550px){
+  body{padding:7px 3px}
+  .hero{padding:23px 18px}
+  .content{padding:13px}
+  .stats{gap:7px}
+  .stat{padding:11px}
+  .stat strong{font-size:22px}
+  .stat span{font-size:10px}
+  .panel{padding:13px}
+  .cloud-panel{padding:7px;min-height:250px}
+  .cloud{height:310px;min-height:250px}
+}
+</style>
+</head>
+
+<body>
+<div class="shell">
+
+  <div class="hero">
+    <div class="topline">
+      <span class="tag">✦ MATHEMATICS • TEACHER VIEW</span>
+      <div class="hero-actions">
+        <button id="refreshBtn" onclick="loadData()" class="hidden">↻ Refresh</button>
+        <button id="logoutBtn" onclick="logout()" class="hidden">Log out</button>
+      </div>
+    </div>
+    <h1>3-2-1 Reflection Hub</h1>
+    <p>Turn pupil reflections into meaningful mathematical discussions.</p>
+  </div>
+
+  <div id="loginPanel" class="panel login-wrap">
+    <h2>Teacher login 🔐</h2>
+    <p class="small">Sign in with your authorised Supabase teacher account to view pupil responses.</p>
+
+    <div class="field">
+      <label>Email address</label>
+      <input id="email" type="email" autocomplete="username" placeholder="Your teacher email">
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Your password">
+    </div>
+
+    <div style="margin-top:18px">
+      <button class="primary" style="width:100%" onclick="login()">Sign in to dashboard →</button>
+    </div>
+
+    <div id="loginStatus" class="status"></div>
+  </div>
+
+  <div id="dashboard" class="content hidden">
+
+    <div class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label>📚 Select lesson / activity</label>
+          <select id="activitySelect" onchange="changeActivity()">
+            <option value="">Loading activities...</option>
+          </select>
+        </div>
+        <button class="secondary" onclick="loadData()">↻ Refresh data</button>
+      </div>
+      <p class="small" id="lastUpdated" style="margin:10px 0 0"></p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <strong id="totalResponses">0</strong>
+        <span>RESPONSES RECEIVED</span>
+      </div>
+      <div class="stat">
+        <strong id="totalAnswers">0</strong>
+        <span>ANSWERS IN THIS SECTION</span>
+      </div>
+      <div class="stat">
+        <strong id="uniqueWords">0</strong>
+        <span>UNIQUE WORDS</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="learn" onclick="switchTab('learn')">3 Learnings</button>
+        <button class="tab" data-tab="interest" onclick="switchTab('interest')">2 Interesting</button>
+        <button class="tab" data-tab="question" onclick="switchTab('question')">1 Question</button>
+      </div>
+
+      <div class="section-heading">
+        <div class="num learn" id="sectionNum">3</div>
+        <div>
+          <h2 id="sectionTitle">Things I learned</h2>
+          <div class="small" id="sectionSubtitle">What new knowledge or skills did pupils gain?</div>
+        </div>
+      </div>
+
+      <div class="cloud-panel">
+        <div class="cloud" id="wordCloud"></div>
+        <div class="word-note" id="cloudNote">Word size represents how often it appears in pupil responses. Click a word to explore.</div>
+      </div>
+
+      <div class="legend">💡 Larger words = more frequently mentioned. Click any word to filter the responses below.</div>
+
+      <div class="controls">
+        <label class="toggle">
+          <input type="checkbox" id="anonymise" checked onchange="renderResponses()">
+          Anonymise pupils
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" id="discussionMode" onchange="renderResponses()">
+          Discussion mode
+        </label>
+
+        <button class="secondary" onclick="clearWordFilter()">Clear word filter</button>
+      </div>
+
+      <div id="filterLabel" class="small" style="margin-bottom:10px"></div>
+      <div id="discussionArea" class="hidden"></div>
+      <div id="responseList" class="response-list"></div>
+      <div id="emptyState" class="empty hidden">No responses found for this selection yet.</div>
+    </div>
+
+    <div id="dataStatus" class="status"></div>
+  </div>
+
+  <footer>MATHEMATICS • THINK • REFLECT • GROW</footer>
+</div>
+
+<script>
+const SUPABASE_URL="https://tvbndbuxdyaavshrtuez.supabase.co";
+const SUPABASE_KEY="sb_publishable_nR1py6IsW4DkpgG2ByEsLA_WbStN0Ps";
+
+const {createClient}=supabase;
+const client=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let allRows=[];
+let currentRows=[];
+let activeTab="learn";
+let selectedWord="";
+let discussionIndex=0;
+
+const categories={
+  learn:{
+    number:"3",
+    title:"Things I learned",
+    subtitle:"What new knowledge or skills did pupils gain?",
+    questionValue:"3 things learnt"
+  },
+  interest:{
+    number:"2",
+    title:"Things I found interesting",
+    subtitle:"What surprised pupils or caught their attention?",
+    questionValue:"2 things interesting"
+  },
+  question:{
+    number:"1",
+    title:"Questions pupils still have",
+    subtitle:"What would pupils like to understand better?",
+    questionValue:"1 question"
+  }
+};
+
+function setStatus(id,message,type){
+  const el=document.getElementById(id);
+  el.textContent=message;
+  el.className="status "+type;
+}
+
+async function login(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const button=document.querySelector("#loginPanel .primary");
+
+  if(!email||!password){
+    setStatus("loginStatus","Please enter your email and password.","error");
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="Signing in...";
+
+  try{
+    const {data,error}=await client.auth.signInWithPassword({email,password});
+    if(error) throw error;
+
+    document.getElementById("loginPanel").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("refreshBtn").classList.remove("hidden");
+    document.getElementById("logoutBtn").classList.remove("hidden");
+
+    await loadData();
+
+  }catch(error){
+    setStatus("loginStatus",error.message||"Login failed. Please check your credentials.","error");
+  }finally{
+    button.disabled=false;
+    button.textContent="Sign in to dashboard →";
+  }
+}
+
+async function logout(){
+  await client.auth.signOut();
+
+  allRows=[];
+  currentRows=[];
+  selectedWord="";
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("loginPanel").classList.remove("hidden");
+  document.getElementById("refreshBtn").classList.add("hidden");
+  document.getElementById("logoutBtn").classList.add("hidden");
+  document.getElementById("password").value="";
+  document.getElementById("email").value="";
+}
+
+async function loadData(){
+  const refresh=document.getElementById("refreshBtn");
+  const status=document.getElementById("dataStatus");
+
+  if(refresh) refresh.textContent="Loading...";
+  status.style.display="none";
+
+  try{
+    const {data,error}=await client
+      .from("responses")
+      .select("student,response,question,activity")
+      .limit(5000);
+
+    if(error) throw error;
+
+    allRows=(data||[]).filter(row=>
+      row.response!==null &&
+      row.response!==undefined
+    );
+
+    const activities=[...new Set(
+      allRows.map(r=>r.activity).filter(a=>a&&a.trim())
+    )].sort();
+
+    const select=document.getElementById("activitySelect");
+    const previous=select.value;
+
+    select.innerHTML="";
+
+    if(activities.length===0){
+      select.innerHTML='<option value="">No activities found</option>';
+      currentRows=[];
+      selectedWord="";
+      renderAll();
+
+      document.getElementById("lastUpdated").textContent=
+        "Last refreshed: "+new Date().toLocaleString();
+
+      setStatus(
+        "dataStatus",
+        "Connected to Supabase, but no individual response records were found. Check that the student tool is saving to the response column and that the teacher has SELECT permission.",
+        "error"
+      );
+      return;
+    }
+
+    activities.forEach(activity=>{
+      const option=document.createElement("option");
+      option.value=activity;
+      option.textContent=activity;
+      select.appendChild(option);
+    });
+
+    select.value=activities.includes(previous)?previous:activities[0];
+
+    filterActivity();
+
+    document.getElementById("lastUpdated").textContent=
+      "Last refreshed: "+new Date().toLocaleString();
+
+    setStatus(
+      "dataStatus",
+      "✓ Successfully retrieved "+allRows.length+
+      " individual response records from Supabase.",
+      "success"
+    );
+
+  }catch(error){
+    console.error("Supabase retrieval error:",error);
+
+    setStatus(
+      "dataStatus",
+      "Unable to retrieve data. Error: "+error.message+
+      (error.code?" (Code: "+error.code+")":""),
+      "error"
+    );
+
+  }finally{
+    if(refresh) refresh.textContent="↻ Refresh data";
+  }
+}
+
+function changeActivity(){
+  filterActivity();
+}
+
+function filterActivity(){
+  const activity=document.getElementById("activitySelect").value;
+
+  currentRows=allRows.filter(row=>row.activity===activity);
+
+  selectedWord="";
+  discussionIndex=0;
+
+  renderAll();
+}
+
+function getEntries(){
+  const category=categories[activeTab];
+  const studentNumbers=new Map();
+
+  currentRows.forEach(row=>{
+    const name=row.student||"Unnamed pupil";
+    if(!studentNumbers.has(name)){
+      studentNumbers.set(name,studentNumbers.size+1);
+    }
+  });
+
+  return currentRows
+    .filter(row=>row.question===category.questionValue)
+    .map(row=>({
+      student:row.student||"Unnamed pupil",
+      answer:String(row.response||"").trim(),
+      index:studentNumbers.get(row.student||"Unnamed pupil")
+    }))
+    .filter(entry=>entry.answer);
+}
+
+const stopWords=new Set((
+  "the a an and or but is are was were be been being to of in on at for from with by as "+
+  "it its this that these those i me my we our you your he she they them their "+
+  "have has had do does did can could would should will just about also very really "+
+  "so if then than when what which who how why where not no yes all any more some "+
+  "one two three thing things learned learn found interesting something another "+
+  "about because today lesson use using used help helps make made get got"
+).split(/\s+/));
+
+function getWordCounts(entries){
+  const counts={};
+
+  entries.forEach(entry=>{
+    const words=entry.answer.toLowerCase()
+      .replace(/https?:\/\/\S+/g," ")
+      .replace(/[^a-z0-9\s'-]/g," ")
+      .split(/\s+/)
+      .filter(word=>
+        word.length>=3 &&
+        !stopWords.has(word) &&
+        !/^\d+$/.test(word)
+      );
+
+    [...new Set(words)].forEach(word=>{
+      counts[word]=(counts[word]||0)+1;
+    });
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+}
+
+const palette=[
+  "#7665e8","#e779a4","#4c9fdb","#3eaa8b",
+  "#d59a49","#9674c8","#5484c7"
+];
+
+/*
+  ORGANIC WORD PLACEMENT
+
+  Words are placed individually, largest first.
+  An Archimedean spiral searches outwards from the centre.
+  Each word is checked against previously placed words.
+  This keeps words close together while preventing overlap.
+*/
+
+function boxesOverlap(a,b,gap=3){
+  return !(
+    a.right+gap<=b.left ||
+    a.left-gap>=b.right ||
+    a.bottom+gap<=b.top ||
+    a.top-gap>=b.bottom
+  );
+}
+
+function makeSpiralPositions(width,height){
+  const positions=[];
+  const cx=width/2;
+  const cy=height/2;
+
+  // Start at the centre, then spiral outwards.
+  positions.push({x:cx,y:cy});
+
+  const goldenAngle=2.3999632297;
+
+  for(let i=1;i<2600;i++){
+    const angle=i*goldenAngle;
+    const radius=2.15*Math.sqrt(i);
+    positions.push({
+      x:cx+Math.cos(angle)*radius,
+      y:cy+Math.sin(angle)*radius*0.78
+    });
+  }
+
+  return positions;
+}
+
+function renderCloud(entries){
+  const cloud=document.getElementById("wordCloud");
+  cloud.innerHTML="";
+
+  const words=getWordCounts(entries);
+  const max=words.length?words[0][1]:0;
+
+  document.getElementById("totalAnswers").textContent=entries.length;
+  document.getElementById("uniqueWords").textContent=words.length;
+
+  if(words.length===0){
+    cloud.innerHTML=
+      '<div class="empty">Not enough text to generate a word cloud yet.</div>';
+    return;
+  }
+
+  const width=cloud.clientWidth;
+  const height=cloud.clientHeight;
+
+  if(width<50){
+    requestAnimationFrame(()=>renderCloud(entries));
+    return;
+  }
+
+  const canvas=document.createElement("canvas");
+  const ctx=canvas.getContext("2d");
+
+  const display=words.slice(0,65);
+  const spiral=makeSpiralPositions(width,height);
+  const placed=[];
+
+  // Larger and more frequent words are placed first.
+  display.forEach(([word,count],i)=>{
+    const ratio=count/max;
+
+    // Give frequent words a stronger size difference.
+    let fontSize=15+Math.pow(ratio,0.72)*34;
+
+    // Slightly reduce sizes when there are many words.
+    if(display.length>35) fontSize*=0.88;
+
+    fontSize=Math.round(fontSize);
+
+    // Some words are vertical, mostly among the smaller words.
+    const vertical=
+      i>=3 &&
+      i%7===3 &&
+      fontSize<36;
+
+    const angle=vertical?90:0;
+
+    ctx.font="900 "+fontSize+"px Nunito, sans-serif";
+
+    const measured=ctx.measureText(word);
+    const textWidth=Math.ceil(measured.width)+10;
+    const textHeight=Math.ceil(fontSize*1.25)+7;
+
+    const boxWidth=vertical?textHeight:textWidth;
+    const boxHeight=vertical?textWidth:textHeight;
+
+    let chosen=null;
+
+    // Search the spiral for a space that fits.
+    for(let p=0;p<spiral.length;p++){
+      const point=spiral[p];
+
+      const left=point.x-boxWidth/2;
+      const right=point.x+boxWidth/2;
+      const top=point.y-boxHeight/2;
+      const bottom=point.y+boxHeight/2;
+
+      // Keep a small margin around the cloud.
+      if(left<3||right>width-3||top<3||bottom>height-3){
+        continue;
+      }
+
+      const candidate={left,right,top,bottom};
+
+      let collision=false;
+
+      for(const existing of placed){
+        if(boxesOverlap(candidate,existing,4)){
+          collision=true;
+          break;
+        }
+      }
+
+      if(!collision){
+        chosen={x:point.x,y:point.y,box:candidate};
+        break;
+      }
+    }
+
+    // If the word cannot fit at its original size, try smaller sizes.
+    if(!chosen){
+      for(let reduced=fontSize-2;reduced>=13;reduced-=2){
+        ctx.font="900 "+reduced+"px Nunito, sans-serif";
+
+        const smallerWidth=Math.ceil(ctx.measureText(word).width)+10;
+        const smallerHeight=Math.ceil(reduced*1.25)+7;
+
+        const w=vertical?smallerHeight:smallerWidth;
+        const h=vertical?smallerWidth:smallerHeight;
+
+        for(let p=0;p<spiral.length;p++){
+          const point=spiral[p];
+
+          const candidate={
+            left:point.x-w/2,
+            right:point.x+w/2,
+            top:point.y-h/2,
+            bottom:point.y+h/2
+          };
+
+          if(candidate.left<3||candidate.right>width-3||
+             candidate.top<3||candidate.bottom>height-3){
+            continue;
+          }
+
+          if(!placed.some(existing=>boxesOverlap(candidate,existing,4))){
+            chosen={x:point.x,y:point.y,box:candidate};
+            fontSize=reduced;
+            break;
+          }
+        }
+
+        if(chosen) break;
+      }
+    }
+
+    // Skip words that genuinely cannot fit.
+    if(!chosen) return;
+
+    placed.push(chosen.box);
+
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="word"+(selectedWord===word?" selected":"");
+
+    button.textContent=word;
+    button.title=count+" response(s) mentioned this word";
+
+    button.style.left=chosen.x+"px";
+    button.style.top=chosen.y+"px";
+    button.style.fontSize=fontSize+"px";
+    button.style.color=palette[i%palette.length];
+    button.style.opacity=0.68+0.32*ratio;
+    button.style.transform=
+      "translate(-50%,-50%) rotate("+angle+"deg)";
+
+    button.onclick=()=>{
+      selectedWord=selectedWord===word?"":word;
+      discussionIndex=0;
+      renderAll();
+    };
+
+    cloud.appendChild(button);
+  });
+}
+
+function renderAll(){
+  const category=categories[activeTab];
+  const entries=getEntries();
+
+  document.querySelectorAll(".tab").forEach(button=>{
+    button.classList.toggle(
+      "active",
+      button.dataset.tab===activeTab
+    );
+  });
+
+  const number=document.getElementById("sectionNum");
+  number.textContent=category.number;
+  number.className="num "+activeTab;
+
+  document.getElementById("sectionTitle").textContent=category.title;
+  document.getElementById("sectionSubtitle").textContent=category.subtitle;
+
+  document.getElementById("totalResponses").textContent=currentRows.length;
+
+  renderCloud(entries);
+  renderResponses();
+}
+
+function switchTab(tab){
+  activeTab=tab;
+  selectedWord="";
+  discussionIndex=0;
+  renderAll();
+}
+
+function clearWordFilter(){
+  selectedWord="";
+  discussionIndex=0;
+  renderAll();
+}
+
+function renderResponses(){
+  const entries=getEntries();
+
+  const anonymise=document.getElementById("anonymise").checked;
+  const discussion=document.getElementById("discussionMode").checked;
+
+  const filtered=selectedWord
+    ?entries.filter(entry=>
+        entry.answer.toLowerCase().includes(selectedWord.toLowerCase())
+      )
+    :entries;
+
+  document.getElementById("filterLabel").textContent=
+    selectedWord
+      ?"Showing responses containing: “"+selectedWord+"” ("+filtered.length+")"
+      :"Showing all "+filtered.length+" responses";
+
+  const list=document.getElementById("responseList");
+  const discussionArea=document.getElementById("discussionArea");
+  const empty=document.getElementById("emptyState");
+
+  list.innerHTML="";
+  discussionArea.innerHTML="";
+
+  if(filtered.length===0){
+    empty.classList.remove("hidden");
+    discussionArea.classList.add("hidden");
+    list.classList.add("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+
+  function speaker(entry){
+    return anonymise
+      ?"Pupil "+String(entry.index).padStart(2,"0")
+      :entry.student;
+  }
+
+  if(discussion){
+    list.classList.add("hidden");
+    discussionArea.classList.remove("hidden");
+
+    discussionIndex=Math.min(discussionIndex,filtered.length-1);
+
+    const entry=filtered[discussionIndex];
+
+    const card=document.createElement("div");
+    card.className="discussion";
+
+    const name=document.createElement("div");
+    name.className="speaker";
+    name.textContent=speaker(entry);
+
+    const answer=document.createElement("div");
+    answer.className="big-answer";
+    answer.textContent=entry.answer;
+
+    const nav=document.createElement("div");
+    nav.className="discussion-nav";
+
+    const prev=document.createElement("button");
+    prev.className="secondary";
+    prev.textContent="← Previous";
+    prev.disabled=discussionIndex===0;
+    prev.onclick=()=>{
+      discussionIndex--;
+      renderResponses();
+    };
+
+    const counter=document.createElement("span");
+    counter.className="small";
+    counter.textContent=(discussionIndex+1)+" / "+filtered.length;
+
+    const next=document.createElement("button");
+    next.className="secondary";
+    next.textContent="Next →";
+    next.disabled=discussionIndex===filtered.length-1;
+    next.onclick=()=>{
+      discussionIndex++;
+      renderResponses();
+    };
+
+    nav.append(prev,counter,next);
+    card.append(name,answer,nav);
+    discussionArea.appendChild(card);
+
+  }else{
+    discussionArea.classList.add("hidden");
+    list.classList.remove("hidden");
+
+    filtered.forEach(entry=>{
+      const card=document.createElement("div");
+      card.className="response-card";
+
+      const head=document.createElement("div");
+      head.className="response-head";
+
+      const name=document.createElement("div");
+      name.className="student-name";
+      name.textContent=speaker(entry);
+
+      head.appendChild(name);
+
+      const answer=document.createElement("div");
+      answer.className="answer";
+      answer.textContent=entry.answer;
+
+      card.append(head,answer);
+      list.appendChild(card);
+    });
+  }
+}
+
+// Recalculate the cloud when the available width changes.
+let resizeTimer;
+window.addEventListener("resize",()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    if(!document.getElementById("dashboard").classList.contains("hidden")){
+      renderCloud(getEntries());
+    }
+  },180);
+});
+
+// Restore a valid teacher session if the dashboard is reopened.
+(async()=>{
+  try{
+    const {data,error}=await client.auth.getSession();
+
+    if(error) throw error;
+
+    if(data.session){
+      document.getElementById("loginPanel").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("refreshBtn").classList.remove("hidden");
+      document.getElementById("logoutBtn").classList.remove("hidden");
+
+      await loadData();
+    }
+  }catch(error){
+    console.error("Session restoration error:",error);
+    setStatus("loginStatus",error.message,"error");
+  }
+})();
+</script>
+</body>
+</html>
